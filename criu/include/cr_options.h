@@ -115,6 +115,7 @@ struct cr_options {
 	 * to turn one ON while the code is in.
 	 */
 	bool			deprecated_ok;
+	bool			remote;
 	bool			display_stats;
 	bool			weak_sysctls;
 };
