@@ -5,9 +5,11 @@
 #include "criu-log.h"
 #include <pthread.h>
 #include <fcntl.h>
+#include <sys/socket.h>
 #include "cr_options.h"
 
 int proxy_to_cache_fd;
+int local_req_fd;
 
 static struct rimage *wait_for_image(struct wthread *wt)
 {
@@ -43,8 +45,8 @@ uint64_t forward_image(struct rimage *rimg)
 
 	if (!strncmp(rimg->path, DUMP_FINISH, sizeof(DUMP_FINISH))) {
 		finished = true;
+		shutdown(local_req_fd, SHUT_RD);
 		return 0;
-		/* TODO - how to kill the accept thread? Close the accept fd? */
 	}
 
 	pthread_mutex_lock(&(rimg->in_use));
@@ -78,7 +80,6 @@ uint64_t forward_image(struct rimage *rimg)
 int image_proxy(char *local_proxy_path, char *fwd_host, unsigned short fwd_port)
 {
 	pthread_t local_req_thr;
-	int local_req_fd;
 
 	pr_info("CRIU to Proxy Path: %s, Cache Address %s:%hu\n",
 		local_proxy_path, fwd_host, fwd_port);
@@ -112,8 +113,8 @@ int image_proxy(char *local_proxy_path, char *fwd_host, unsigned short fwd_port)
 		return -1;
 	}
 
-	join_workers();
-
 	pthread_join(local_req_thr, NULL);
+	join_workers();
+	pr_info("Finished image proxy.");
 	return 0;
 }

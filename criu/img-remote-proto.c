@@ -400,11 +400,7 @@ void join_workers(void)
 {
 	struct wthread *wthread = NULL;
 
-	while (1) {
-	    if (list_empty(&workers_head)) {
-		    sem_wait(&workers_semph);
-		    continue;
-	    }
+	while (! list_empty(&workers_head)) {
 	    wthread = list_entry(workers_head.next, struct wthread, l);
 	    if (pthread_join(wthread->tid, NULL))
 		    pr_perror("Could not join thread %lu", (unsigned long) wthread->tid);
@@ -564,7 +560,9 @@ void *accept_local_image_connections(void *port)
 	while (1) {
 		cli_fd = accept(fd, (struct sockaddr *) &cli_addr, &clilen);
 		if (cli_fd < 0) {
-			pr_perror("Unable to accept local image connection");
+			if (!finished)
+				pr_err("Unable to accept local image connection");
+			close(cli_fd);
 			return NULL;
 		}
 
