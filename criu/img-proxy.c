@@ -8,46 +8,15 @@
 #include <sys/socket.h>
 #include "cr_options.h"
 
-int proxy_to_cache_fd;
-int local_req_fd;
-
 static struct rimage *wait_for_image(struct wthread *wt)
 {
-	struct rimage *result;
-
-	result = get_rimg_by_name(wt->snapshot_id, wt->path);
-	if (result != NULL) {
-		if (write_reply_header(wt->fd, 0) < 0) {
-			pr_perror("Error writing reply header for %s:%s",
-			    wt->path, wt->snapshot_id);
-			close(wt->fd);
-			return NULL;
-		}
-		return result;
-	}
-
-	/* The file does not exist. */
-	else {
-	    pr_info("No image %s:%s.\n", wt->path, wt->snapshot_id);
-		if (write_reply_header(wt->fd, ENOENT) < 0) {
-			pr_perror("Error writing reply header for unexisting image");
-			return NULL;
-		}
-		close(wt->fd);
-		return NULL;
-	}
+	return get_rimg_by_name(wt->snapshot_id, wt->path);
 }
 
 uint64_t forward_image(struct rimage *rimg)
 {
 	uint64_t ret;
 	int fd = proxy_to_cache_fd;
-
-	if (!strncmp(rimg->path, DUMP_FINISH, sizeof(DUMP_FINISH))) {
-		finished = true;
-		shutdown(local_req_fd, SHUT_RD);
-		return 0;
-	}
 
 	pthread_mutex_lock(&(rimg->in_use));
 	if (write_remote_header(

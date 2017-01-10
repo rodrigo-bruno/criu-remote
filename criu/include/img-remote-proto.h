@@ -48,6 +48,8 @@ struct wthread {
 extern bool finished;
 /* This is the proxy to cache TCP socket FD. */
 extern int proxy_to_cache_fd;
+/* This the unix socket used to fulfill local requests. */
+extern int local_req_fd;
 
 int init_daemon(bool background, struct rimage *(*wfi)(struct wthread*));
 

@@ -12,47 +12,29 @@ static struct rimage *wait_for_image(struct wthread *wt)
 {
 	struct rimage *result;
 
-	result = get_rimg_by_name(wt->snapshot_id, wt->path);
-	if (result != NULL && result->size > 0) {
-		if (write_reply_header(wt->fd, 0) < 0) {
-			pr_perror("Error writing reply header for %s:%s",
-						wt->path, wt->snapshot_id);
-			close(wt->fd);
-			return NULL;
-		}
-		return result;
-	}
-
-	/* The file does not exist and we do not expect new files */
-	if (finished && !is_receiving()) {
-		pr_info("No image %s:%s.\n", wt->path, wt->snapshot_id);
-		if (write_reply_header(wt->fd, ENOENT) < 0) {
-			pr_perror("Error writing reply header for unexisting image");
-			return NULL;
-		}
-		close(wt->fd);
+	if (!strncmp(wt->path, RESTORE_FINISH, sizeof(RESTORE_FINISH))) {
+		finished = true;
+		shutdown(local_req_fd, SHUT_RD);
 		return NULL;
 	}
+
+	result = get_rimg_by_name(wt->snapshot_id, wt->path);
+	if (result != NULL && result->size > 0)
+		return result;
+
+	/* The file does not exist and we do not expect new files */
+	if (finished && !is_receiving())
+		return NULL;
+
 	/* NOTE: at this point, when the thread wakes up, either the image is
 	 * already in memory or it will never come (the dump is finished).
 	 */
 	sem_wait(&(wt->wakeup_sem));
 	result = get_rimg_by_name(wt->snapshot_id, wt->path);
-	if (result != NULL && result->size > 0) {
-		if (write_reply_header(wt->fd, 0) < 0) {
-			pr_perror("Error writing reply header for %s:%s",
-						wt->path, wt->snapshot_id);
-			close(wt->fd);
-			return NULL;
-		}
+	if (result != NULL && result->size > 0)
 		return result;
-	} else {
-		pr_info("No image %s:%s.\n", wt->path, wt->snapshot_id);
-		if (write_reply_header(wt->fd, ENOENT) < 0)
-			pr_perror("Error writing reply header for unexisting image");
-		close(wt->fd);
+	else
 		return NULL;
-	}
 }
 
 /* The image cache creates a thread that calls this function. It waits for remote
@@ -105,9 +87,8 @@ void *accept_remote_image_connections(void *port)
 			finalize_recv_rimg(NULL);
 			return NULL;
 		} else if (ret != size) {
-			pr_perror("Unable to receive %s:%s from image proxy "
-						"(received %lu bytes, expected %lu bytes)",
-						rimg->path, rimg->snapshot_id, ret, size);
+			pr_perror("Unable to receive %s:%s from image proxy (received %lu bytes, expected %lu bytes)",
+				rimg->path, rimg->snapshot_id, ret, size);
 			finalize_recv_rimg(NULL);
 			return NULL;
 		}
@@ -121,18 +102,17 @@ void *accept_remote_image_connections(void *port)
 int image_cache(bool background, char *local_cache_path, unsigned short cache_write_port)
 {
 	pthread_t local_req_thr, remote_req_thr;
-	int local_req_fd, remote_req_fd;
 
 	pr_info("Proxy to Cache Port %d, CRIU to Cache Path %s\n",
 			cache_write_port, local_cache_path);
 
 
 	if (opts.ps_socket != -1) {
-		remote_req_fd = opts.ps_socket;
-		pr_info("Re-using ps socket %d\n", remote_req_fd);
+		proxy_to_cache_fd = opts.ps_socket;
+		pr_info("Re-using ps socket %d\n", proxy_to_cache_fd);
 	} else {
-		remote_req_fd = setup_TCP_server_socket(cache_write_port);
-		if (remote_req_fd < 0) {
+		proxy_to_cache_fd = setup_TCP_server_socket(cache_write_port);
+		if (proxy_to_cache_fd < 0) {
 			pr_perror("Unable to open proxy to cache TCP socket");
 			return -1;
 		}
@@ -152,7 +132,7 @@ int image_cache(bool background, char *local_cache_path, unsigned short cache_wr
 	if (pthread_create(
 		&remote_req_thr,
 		NULL, accept_remote_image_connections,
-		(void *) &remote_req_fd)) {
+		(void *) &proxy_to_cache_fd)) {
 		pr_perror("Unable to create remote requests thread");
 		return -1;
 	}
@@ -165,9 +145,9 @@ int image_cache(bool background, char *local_cache_path, unsigned short cache_wr
 		return -1;
 	}
 
-	join_workers();
-
 	pthread_join(remote_req_thr, NULL);
 	pthread_join(local_req_thr, NULL);
+	join_workers();
+	pr_info("Finished image cache.");
 	return 0;
 }

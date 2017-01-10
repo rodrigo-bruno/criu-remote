@@ -67,7 +67,7 @@ int read_remote_image_connection(char *snapshot_id, char *path)
 		pr_perror("Error reading reply header for %s:%s", path, snapshot_id);
 		return -1;
 	}
-	if (!error)
+	if (!error || !strncmp(path, RESTORE_FINISH, sizeof(RESTORE_FINISH)))
 		return sockfd;
 	else if (error == ENOENT) {
 		pr_info("Image does not exist (%s:%s)\n", path, snapshot_id);
@@ -100,6 +100,20 @@ int finish_remote_dump(void)
 
 	if (fd == -1) {
 		pr_perror("Unable to open finish dump connection");
+		return -1;
+	}
+
+	close(fd);
+	return 0;
+}
+
+int finish_remote_restore(void)
+{
+	pr_info("Restore side is calling finish\n");
+	int fd = read_remote_image_connection(NULL_SNAPSHOT_ID, RESTORE_FINISH);
+
+	if (fd == -1) {
+		pr_perror("Unable to open finish restore connection");
 		return -1;
 	}
 

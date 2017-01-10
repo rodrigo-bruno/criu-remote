@@ -6,6 +6,7 @@
 
 #define PATHLEN PATH_MAX
 #define DUMP_FINISH "DUMP_FINISH"
+#define RESTORE_FINISH "RESTORE_FINISH"
 #define PARENT_IMG "parent"
 #define NULL_SNAPSHOT_ID "null"
 #define DEFAULT_CACHE_SOCKET "img-cache.sock"
@@ -23,11 +24,12 @@ int read_remote_image_connection(char *snapshot_id, char *path);
  */
 int write_remote_image_connection(char *snapshot_id, char *path, int flags);
 
-/* Called by dump when everything is dumped. This function creates a new
- * connection with a special control name. The recover side uses it to ack that
- * no more files are coming.
+/* Called by dump/restore when everything is dumped/restored. This function 
+ * creates a new connection with a special control name. The receiver side uses
+ * it to ack that no more files are coming.
  */
 int finish_remote_dump();
+int finish_remote_restore();
 
 /* Starts an image proxy daemon (dump side). It receives image files through
  * socket connections and forwards them to the image cache (restore side).

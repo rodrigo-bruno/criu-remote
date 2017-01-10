@@ -76,7 +76,6 @@ function test_dump_restore {
 	restore ; result $(($?))
 
 	kill -SIGKILL ${PID}
-	pkill criu
 }
 
 function test_predump_dump_restore {
@@ -94,8 +93,8 @@ function test_predump_dump_restore {
 	restore ; result $(($?))
 
 	kill -SIGKILL ${PID}
-	pkill criu
 }
 
 test_dump_restore
+sleep 1
 test_predump_dump_restore
