@@ -1,4 +1,5 @@
 #include <limits.h>
+#include <stdbool.h>
 
 #ifndef IMAGE_REMOTE_H
 #define	IMAGE_REMOTE_H
@@ -31,13 +32,13 @@ int finish_remote_dump();
 /* Starts an image proxy daemon (dump side). It receives image files through
  * socket connections and forwards them to the image cache (restore side).
  */
-int image_proxy(char *local_proxy_path, char *cache_host, unsigned short cache_port);
+int image_proxy(bool background, char *local_proxy_path, char *cache_host, unsigned short cache_port);
 
 /* Starts an image cache daemon (restore side). It receives image files through
  * socket connections and caches them until they are requested by the restore
  * process.
  */
-int image_cache(char *local_cache_path, unsigned short cache_port);
+int image_cache(bool background, char *local_cache_path, unsigned short cache_port);
 
 /* Reads (discards) 'len' bytes from fd. This is used to emulate the function
  * lseek, which is used to advance the file needle.

@@ -161,8 +161,14 @@ void unlock_workers(void)
 	pthread_mutex_unlock(&workers_lock);
 }
 
-int init_daemon(struct rimage *(*wfi)(struct wthread*))
+int init_daemon(bool background, struct rimage *(*wfi)(struct wthread*))
 {
+	if (background) {
+		if (daemon(1, 0) == -1) {
+			pr_perror("Can't run service server in the background");
+			return -1;
+		}
+	}
 	wait_for_image = wfi;
 	return init_sync_structures();
 }

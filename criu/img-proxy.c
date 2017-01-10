@@ -77,7 +77,7 @@ uint64_t forward_image(struct rimage *rimg)
 	return ret;
 }
 
-int image_proxy(char *local_proxy_path, char *fwd_host, unsigned short fwd_port)
+int image_proxy(bool background, char *local_proxy_path, char *fwd_host, unsigned short fwd_port)
 {
 	pthread_t local_req_thr;
 
@@ -101,7 +101,7 @@ int image_proxy(char *local_proxy_path, char *fwd_host, unsigned short fwd_port)
 		}
 	}
 
-	if (init_daemon(wait_for_image))
+	if (init_daemon(background, wait_for_image))
 		return -1;
 
 	if (pthread_create(

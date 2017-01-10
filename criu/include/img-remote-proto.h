@@ -49,7 +49,7 @@ extern bool finished;
 /* This is the proxy to cache TCP socket FD. */
 extern int proxy_to_cache_fd;
 
-int init_daemon(struct rimage *(*wfi)(struct wthread*));
+int init_daemon(bool background, struct rimage *(*wfi)(struct wthread*));
 
 void join_workers(void);
 void unlock_workers(void);

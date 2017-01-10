@@ -3,8 +3,6 @@
 set -x
 
 PID=
-CACHE_PID=
-PROXY_PID=
 
 function run {
 	echo "== Run ${LOOP}"
@@ -20,15 +18,13 @@ function run {
 }
 
 function prepare {
-	${CRIU} image-cache -vvvv -o ${LOG}/image-cache.log \
-						--port ${PROXY_CACHE_TCP_PORT} --images-dir $1< /dev/null &> /dev/null &
-	CACHE_PID=$!
+	${CRIU} image-cache -d -vvvv -o ${LOG}/image-cache.log \
+						--port ${PROXY_CACHE_TCP_PORT} --images-dir $1
 	sleep 1
 
-	${CRIU} image-proxy -vvvv -o ${LOG}/image-proxy.log \
+	${CRIU} image-proxy -d -vvvv -o ${LOG}/image-proxy.log \
 						--address localhost \
-						--port ${PROXY_CACHE_TCP_PORT} --images-dir $1< /dev/null &> /dev/null &
-	PROXY_PID=$!
+						--port ${PROXY_CACHE_TCP_PORT} --images-dir $1
 	sleep 1
 }
 
@@ -80,8 +76,7 @@ function test_dump_restore {
 	restore ; result $(($?))
 
 	kill -SIGKILL ${PID}
-    kill -SIGKILL ${CACHE_PID}
-    kill -SIGKILL ${PROXY_PID}
+	pkill criu
 }
 
 function test_predump_dump_restore {
@@ -99,8 +94,7 @@ function test_predump_dump_restore {
 	restore ; result $(($?))
 
 	kill -SIGKILL ${PID}
-	kill -SIGKILL ${CACHE_PID}
-	kill -SIGKILL ${PROXY_PID}
+	pkill criu
 }
 
 test_dump_restore

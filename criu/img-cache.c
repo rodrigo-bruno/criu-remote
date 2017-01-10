@@ -118,7 +118,7 @@ void *accept_remote_image_connections(void *port)
 	}
 }
 
-int image_cache(char *local_cache_path, unsigned short cache_write_port)
+int image_cache(bool background, char *local_cache_path, unsigned short cache_write_port)
 {
 	pthread_t local_req_thr, remote_req_thr;
 	int local_req_fd, remote_req_fd;
@@ -144,7 +144,7 @@ int image_cache(char *local_cache_path, unsigned short cache_write_port)
 		return -1;
 	}
 
-	if (init_daemon(wait_for_image)) {
+	if (init_daemon(background, wait_for_image)) {
 		pr_perror("Unable to initialize daemon");
 		return -1;
 	}

@@ -763,10 +763,10 @@ int main(int argc, char *argv[], char *envp[])
 		return cr_page_server(opts.daemon_mode, -1) > 0 ? 0 : 1;
 
 	if (!strcmp(argv[optind], "image-cache"))
-		return image_cache(DEFAULT_CACHE_SOCKET, opts.port);
+		return image_cache(opts.daemon_mode, DEFAULT_CACHE_SOCKET, opts.port);
 
 	if (!strcmp(argv[optind], "image-proxy"))
-		return image_proxy(DEFAULT_PROXY_SOCKET, opts.addr, opts.port);
+		return image_proxy(opts.daemon_mode, DEFAULT_PROXY_SOCKET, opts.addr, opts.port);
 
 	if (!strcmp(argv[optind], "service"))
 		return cr_service(opts.daemon_mode);
