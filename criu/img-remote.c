@@ -19,6 +19,7 @@
 #define PB_LOCAL_IMAGE_SIZE PATHLEN
 
 static char *snapshot_id;
+bool restoring = true;
 
 LIST_HEAD(snapshot_head);
 
@@ -50,7 +51,7 @@ void add_snapshot(struct snapshot *snapshot)
 int read_remote_image_connection(char *snapshot_id, char *path)
 {
 	int error;
-	int sockfd = setup_UNIX_client_socket(DEFAULT_CACHE_SOCKET);
+	int sockfd = setup_UNIX_client_socket(restoring ? DEFAULT_CACHE_SOCKET: DEFAULT_PROXY_SOCKET);
 
 	if (sockfd < 0) {
 		pr_perror("Error opening local connection for %s:%s", path, snapshot_id);
@@ -179,6 +180,7 @@ static int pull_snapshot_ids(void)
 int push_snapshot_id(void)
 {
 	int n;
+	restoring = false;
 	SnapshotIdEntry rn = SNAPSHOT_ID_ENTRY__INIT;
 	int sockfd = write_remote_image_connection(NULL_SNAPSHOT_ID, PARENT_IMG, O_APPEND);
 
