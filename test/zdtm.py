@@ -777,6 +777,7 @@ class criu:
 		self.__mdedup = (opts['noauto_dedup'] and True or False)
 		self.__user = (opts['user'] and True or False)
 		self.__leave_stopped = (opts['stop'] and True or False)
+		self.__remote = (opts['remote'] and True or False)
 		self.__criu = (opts['rpc'] and criu_rpc or criu_cli)
 
 	def logs(self):
@@ -886,8 +887,6 @@ class criu:
 
 		if self.__remote:
 			from subprocess import check_output
-			os.system("killall -9 criu")
-			time.sleep(1)
 
 			logdir = os.getcwd() + "/" + self.__dump_path + "/" + str(self.__iter)
 			print "Adding image cache"
