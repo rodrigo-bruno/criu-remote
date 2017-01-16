@@ -288,6 +288,7 @@ int setup_UNIX_client_socket(char *path)
 
 	if (connect(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		pr_perror("Unable to connect to local socket: %s", path);
+		close(sockfd);
 		return -1;
 	}
 
