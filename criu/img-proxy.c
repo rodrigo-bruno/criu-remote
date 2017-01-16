@@ -19,6 +19,8 @@ uint64_t forward_image(struct rimage *rimg)
 	int fd = proxy_to_cache_fd;
 
 	pthread_mutex_lock(&(rimg->in_use));
+	pr_info("Forwarding %s:%s (%lu bytes)\n",
+	    rimg->path, rimg->snapshot_id, rimg->size);
 	if (write_remote_header(
 		fd, rimg->snapshot_id, rimg->path, O_APPEND, rimg->size) < 0) {
 		pr_perror("Error writing header for %s:%s",
@@ -39,10 +41,9 @@ uint64_t forward_image(struct rimage *rimg)
 		pthread_mutex_unlock(&(rimg->in_use));
 		return -1;
 	}
-	pthread_mutex_unlock(&(rimg->in_use));
-
 	pr_info("Finished forwarding %s:%s (sent %lu bytes)\n",
 	    rimg->path, rimg->snapshot_id, rimg->size);
+	pthread_mutex_unlock(&(rimg->in_use));
 	return ret;
 }
 
