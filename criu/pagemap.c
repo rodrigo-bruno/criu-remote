@@ -139,7 +139,7 @@ static void skip_pagemap_pages(struct page_read *pr, unsigned long len)
 
 	if (!pr->pe->in_parent)
 		if (opts.remote)
-			if (! skip_remote_bytes(img_raw_fd(pr->pi), len))
+			if (skip_remote_bytes(img_raw_fd(pr->pi), len))
 				pr_perror("Error skipping remote bytes");
 		pr->pi_off += len;
 	pr->cvaddr += len;
