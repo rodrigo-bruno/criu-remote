@@ -322,7 +322,7 @@ int do_open_remote_image(int dfd, char *path, int flags)
 	 * change to previous working dir and back to correctly open the image
 	 * proxy and cache sockets. */
 	int save = dirfd(opendir("."));
-	if (fchdir(dfd) < 0) {
+	if (fchdir(get_service_fd(IMG_FD_OFF)) < 0) {
 		pr_debug("fchdir to dfd failed!\n");
 		return -1;
 	}
