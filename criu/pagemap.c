@@ -137,11 +137,12 @@ static void skip_pagemap_pages(struct page_read *pr, unsigned long len)
 	if (!len)
 		return;
 
-	if (!pr->pe->in_parent)
+	if (!pr->pe->in_parent) {
 		if (opts.remote)
 			if (skip_remote_bytes(img_raw_fd(pr->pi), len))
 				pr_perror("Error skipping remote bytes");
 		pr->pi_off += len;
+	}
 	pr->cvaddr += len;
 }
 
@@ -159,7 +160,7 @@ static int seek_pagemap(struct page_read *pr, unsigned long vaddr)
 			break;
 
 		if (vaddr >= start && vaddr < end) {
-			skip_pagemap_pages(pr, start - pr->cvaddr);
+			skip_pagemap_pages(pr, start > pr->cvaddr ? start - pr->cvaddr : 0);
 			return 1;
 		}
 
@@ -175,7 +176,7 @@ adv:
 static int seek_pagemap_page(struct page_read *pr, unsigned long vaddr)
 {
 	if (seek_pagemap(pr, vaddr)) {
-		skip_pagemap_pages(pr, vaddr - pr->cvaddr);
+		skip_pagemap_pages(pr, vaddr > pr->cvaddr ? vaddr - pr->cvaddr : 0);
 		return 1;
 	}
 
